@@ -116,11 +116,12 @@ tags:
     - [11.1 Then/Catch](#111-thencatch)
     - [11.2 Common Mistakes (Then/Catch)](#112-common-mistakes-thencatch)
     - [11.3 Then/Catch 总结（Summary of Then/Catch）](#113-thencatch-总结summary-of-thencatch)
-  - [Section 12: Asynchronous JavaScript - Promise.All \& Async/Await](#section-12-asynchronous-javascript---promiseall--asyncawait)
-    - [12.1 Promise.All()](#121-promiseall)
+  - [Section 12: Asynchronous JavaScript - Promise.All, Promise.allSettled() \& Async/Await](#section-12-asynchronous-javascript---promiseall-promiseallsettled--asyncawait)
+    - [12.1 Promise.All() 和 Promise.allSettled()](#121-promiseall-和-promiseallsettled)
     - [12.2 Async/Await](#122-asyncawait)
     - [12.3 结合使用 Promise.All() 和 Async/Await](#123-结合使用-promiseall-和-asyncawait)
-    - [12.4 总结（Summary of Promise.All \& Async/Await）](#124-总结summary-of-promiseall--asyncawait)
+    - [12.4 异步流](#124-异步流)
+    - [12.5 总结（Summary of Promise.All \& Async/Await）](#125-总结summary-of-promiseall--asyncawait)
   - [Section 13: Asynchronous JavaScript - Call API](#section-13-asynchronous-javascript---call-api)
     - [13.1 Fetch API](#131-fetch-api)
     - [13.2 Chuck Norris API](#132-chuck-norris-api)
@@ -928,6 +929,7 @@ console.log(sum);
 
 ### 7.10 this 关键字（The ‘this’ keyword）
 - `this` 关键字的值取决于函数的调用方式。
+
   ```javascript
   const object = {
     myMethod() {
@@ -939,6 +941,122 @@ console.log(sum);
   const myMethod = object.myMethod;
   myMethod(); // logs global object (or undefined in strict mode)
   ```
+
+`this` 关键字在 JavaScript 中是非常重要但有时又显得难以把握的一个概念。正确理解和使用 `this` 可以帮助你写出更清晰、更有效的代码。
+
+1. `this` 的基本原则
+
+- `this` 关键字指向函数调用的上下文（或 "所有者"）。
+- `this` 的值在函数运行时计算，它取决于函数的调用方式。
+
+2. 不同上下文中的 `this`
+
+- 全局上下文
+
+  **在全局执行上下文（在任何函数体外部）中，`this` 指向全局对象。**
+  - 在浏览器中，它指向 `window` 对象。
+  - 在 Node.js 中，全局上下文中的 `this` 指向 `global` 对象。
+
+  ```javascript
+  console.log(this.document === document); // true, 在浏览器中
+  ```
+
+- 函数上下文
+
+  **普通函数调用：**
+  - 非严格模式下，`this` 指向全局对象。
+  - 严格模式下，`this` 值为 `undefined`。
+
+  ```javascript
+  function f1(){
+    return this;
+  }
+
+  console.log(f1()); // 在浏览器中，非严格模式下，输出 Window
+  ```
+
+  **对象方法调用：**
+  - 当函数作为对象的方法被调用时，`this` 指向该方法所在的对象。
+
+  ```javascript
+  let obj = {
+    myMethod: function() {
+      return this;
+    }
+  };
+
+  console.log(obj.myMethod() === obj); // true
+  ```
+
+  **构造函数：**
+  - 使用 `new` 操作符调用构造函数时，`this` 被绑定到正在构建的新对象上。
+
+  ```javascript
+  function Car(make, model) {
+    this.make = make;
+    this.model = model;
+  }
+
+  let myCar = new Car('Toyota', 'Corolla');
+  console.log(myCar.make); // 输出 'Toyota'
+  ```
+
+3. 特殊情况：箭头函数
+
+- 箭头函数不绑定自己的 `this`，它继承自外围（函数或全局）作用域的 `this`。
+
+  ```javascript
+  const team = {
+    members: ['Jane', 'Bill'],
+    teamName: 'Super Squad',
+    teamSummary: function() {
+      return this.members.map((member) => {
+        return `${member} is on team ${this.teamName}`;
+      });
+    }
+  };
+
+  console.log(team.teamSummary());
+  ```
+
+4. 控制和修改 `this`
+
+- **使用 `bind()`：**
+  - `bind()` 方法创建一个新的函数，你可以传递一个参数给 `bind()`，这个参数将会替代原函数运行时的 `this`。
+
+  ```javascript
+  let bike = {
+    model: 'Basic',
+  };
+
+  function details(level) {
+    console.log(`${level}: Model of the bike is ${this.model}`);
+  }
+
+  let bikeDetails = details.bind(bike, 'Info');
+  bikeDetails();
+  ```
+
+- **使用 `call()` 和 `apply()`：**
+  - 这些方法允许临时绑定 `this` 并立即执行函数。
+  - `call()` 接收参数列表，`apply()` 接收一个参数数组。
+
+  ```javascript
+  function introduce(language) {
+    console.log(`I program in ${language} and my name is ${this.name}`);
+  }
+
+  let developer = {
+    name: 'Alice'
+  };
+
+  introduce.call(developer, 'JavaScript'); // 使用 call
+  introduce.apply(developer, ['JavaScript']); // 使用 apply
+  ```
+
+5. 常见陷阱和如何避免
+
+- 在回调函数中使用 `this` 时，特别是在使用传统函数时，`this` 可能不指向你预期的上下文。使用箭头函数或 `bind()` 方法可以帮助确保 `this` 指向正确的对象。
 
 ### 7.11 函数总结（Summary of Functions）
 本章详细探讨了 JavaScript 中的函数，从基本声明到高级特性，帮助你理解如何有效地使用函数来编写灵活且可维护的代码。
@@ -1223,9 +1341,9 @@ Promises 提供了一个更加强大和灵活的方式来处理异步操作。�
 
 
 
-## Section 12: Asynchronous JavaScript - Promise.All & Async/Await
+## Section 12: Asynchronous JavaScript - Promise.All, Promise.allSettled() & Async/Await
 
-### 12.1 Promise.All()
+### 12.1 Promise.All() 和 Promise.allSettled()
 `Promise.all()` 是一个用于处理多个 Promise 并行执行并等待所有 Promise 完成的函数。它接收一个 Promise 数组作为参数，并返回一个新的 Promise，该 Promise 在所有输入的 Promise 都成功解决时解决，返回值是一个结果数组。如果任何一个 Promise 被拒绝，`Promise.all()` 返回的 Promise 会立即被拒绝。
 
 - **使用示例**：
@@ -1243,8 +1361,69 @@ Promises 提供了一个更加强大和灵活的方式来处理异步操作。�
   });
   ```
 
+在 JavaScript 中，`Promise.all()` 和 `Promise.allSettled()` 是两种常用于并发处理 Promise 的方法，它们的行为有所不同，尤其在处理任务失败的情况下。
+
+1. `Promise.all`
+
+- **行为**: `Promise.all` 接受一个包含多个 `Promise` 对象的数组，并返回一个新的 `Promise`。这个返回的 `Promise` 只有在所有输入的 `Promise` 都成功时才会被解析（fulfilled），如果其中有任何一个 `Promise` 被拒绝（rejected），整个 `Promise.all` 返回的 `Promise` 会立即被拒绝，且拒绝的原因就是第一个被拒绝的 `Promise` 的原因。
+
+- **影响**: 具体来说，当使用 `Promise.all` 时，如果一个任务（即一个 `Promise`）崩溃（即被拒绝），那么整个 `Promise.all` 会立即失败，所有未完成的任务的结果将被忽略。不过，这并不意味着所有任务都会立即停止或“出问题”；其他任务依然会执行，但 `Promise.all` 返回的 `Promise` 会因为第一个被拒绝的任务而被拒绝。
+
+  ```javascript
+  const promise1 = new Promise((resolve, reject) => setTimeout(resolve, 100, 'one'));
+  const promise2 = new Promise((resolve, reject) => setTimeout(reject, 200, 'two'));
+  const promise3 = new Promise((resolve, reject) => setTimeout(resolve, 300, 'three'));
+
+  Promise.all([promise1, promise2, promise3])
+    .then((values) => {
+      console.log(values); // 不会执行，因为 promise2 被拒绝了
+    })
+    .catch((error) => {
+      console.error('Error:', error); // 输出 "Error: two"
+    });
+  ```
+
+  在上面的例子中，`promise2` 被拒绝，因此 `Promise.all` 返回的 `Promise` 被拒绝，并且错误处理程序会捕获到这个拒绝原因。
+
+2. `Promise.allSettled`
+
+- **行为**: `Promise.allSettled` 也是接受一个包含多个 `Promise` 对象的数组，并返回一个新的 `Promise`。与 `Promise.all` 不同，`Promise.allSettled` 在所有的 `Promise` 都已经完成（不管是成功还是失败）之后，返回的 `Promise` 才会被解析，并且解析的结果是每个 `Promise` 的状态和结果。
+
+- **优点**: 因此，即使某些任务失败了（被拒绝），`Promise.allSettled` 返回的 `Promise` 依然会被解析，并且会包含每个任务的结果，不会因为一个任务失败而导致整个过程被中断。
+
+  ```javascript
+  const promise1 = new Promise((resolve, reject) => setTimeout(resolve, 100, 'one'));
+  const promise2 = new Promise((resolve, reject) => setTimeout(reject, 200, 'two'));
+  const promise3 = new Promise((resolve, reject) => setTimeout(resolve, 300, 'three'));
+
+  Promise.allSettled([promise1, promise2, promise3])
+    .then((results) => {
+      results.forEach((result) => console.log(result));
+      /*
+      输出:
+      { status: 'fulfilled', value: 'one' }
+      { status: 'rejected', reason: 'two' }
+      { status: 'fulfilled', value: 'three' }
+      */
+    });
+  ```
+
+  在这个例子中，即使 `promise2` 被拒绝了，`Promise.allSettled` 还是会等待所有的 `Promise` 都完成，然后返回一个包含每个 `Promise` 结果的数组。
+
+3. 总结
+
+- **`Promise.all`**: 在并发任务处理中，如果任何一个任务被拒绝，整个 `Promise.all` 返回的 `Promise` 就会被拒绝。这在某些情况下是有问题的，因为一个任务的失败会导致其他任务的结果被忽略。
+  
+- **`Promise.allSettled`**: 更加稳健，因为它会等待所有任务都完成，无论成功或失败，并返回每个任务的结果。这对于需要处理所有任务结果的场景更加合适。
+
+所以，`Promise.all` 是会在一个任务失败时立即停止处理其他任务结果，而 `Promise.allSettled` 会确保所有任务都得到处理。选择哪个方法取决于你在处理并发任务时的具体需求。
+
 ### 12.2 Async/Await
 `async/await` 是建立在 Promises 之上的语法糖，使得异步代码的编写更接近于传统的同步代码，即可以使用 try-catch 块来捕获错误。
+
+在 JavaScript 中，async 函数总是返回一个 Promise 对象，无论函数内部是否显式返回了一个 Promise。
+
+如果 async 函数返回一个非 Promise 的值，这个值会被自动封装在一个已解析的 Promise 中。
 
 - **基本语法**：
   - 使用 `async` 关键字声明一个函数，这使得该函数自动返回一个 Promise。
@@ -1284,7 +1463,40 @@ Promises 提供了一个更加强大和灵活的方式来处理异步操作。�
   fetchMultipleData();
   ```
 
-### 12.4 总结（Summary of Promise.All & Async/Await）
+### 12.4 异步流
+
+JavaScript 中没有内置的异步流控制（类似 C# 中的 `IAsyncEnumerable<T>`）。但是，可以使用 `for await...of` 语法来迭代异步迭代器。
+
+- **结合示例**
+  ```javascript
+  async function* generateNumbers() {
+      for (let i = 0; i < 3; i++) {
+          yield new Promise(resolve => setTimeout(() => resolve(i), 1000));
+      }
+  }
+
+  (async () => {
+      for await (const num of generateNumbers()) {
+          console.log(num);
+      }
+  })();
+  ```
+
+  类似 C# 中的 `await foreach` 迭代异步序列：
+  ```csharp
+  async IAsyncEnumerable<int> GenerateNumbersAsync() {
+      for (int i = 0; i < 3; i++) {
+          yield return i;
+          await Task.Delay(1000);
+      }
+  }
+
+  await foreach (var num in GenerateNumbersAsync()) {
+      Console.WriteLine(num);
+  }
+  ```
+
+### 12.5 总结（Summary of Promise.All & Async/Await）
 这些工具提供了强大的功能来简化异步编程的复杂性。`Promise.all()` 是并行处理多个操作的理想选择，而 `async/await` 让代码的结构更清晰、更易于维护。
 
 
